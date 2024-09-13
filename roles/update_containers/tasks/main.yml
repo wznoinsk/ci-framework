@@ -14,6 +14,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+- name: update_containers_gather_facts
+  setup:
+  when: ansible_user_dir is not defined
+  tags: always
+
+- name: Set the correct values of facts when cifmw_update_containers == True
+  set_fact:
+    cifmw_update_containers_dest_path_: "{{ cifmw_update_containers_dest_path }}"
+    cifmw_update_containers_template_file_: "{{ cifmw_update_containers_template_file }}"
+  when: cifmw_update_containers | bool
+
+- name: Set the correct values of facts when cifmw_update_containers_cvp == True
+  set_fact:
+    cifmw_update_containers_dest_path_: "{{ cifmw_update_containers_dest_path_cvp }}"
+    cifmw_update_containers_template_file_: "{{ cifmw_update_containers_template_file_cvp }}"
+  when: cifmw_update_containers_cvp | bool
+
 - name: Destination directory exists
   ansible.builtin.file:
     state: directory
@@ -22,14 +39,14 @@
 
 - name: Generate update containers yaml file
   ansible.builtin.template:
-    src: "update_containers.j2"
-    dest: "{{ cifmw_update_containers_dest_path }}"
+    src: "{{ cifmw_update_containers_template_file_ }}"
+    dest: "{{ cifmw_update_containers_dest_path_ }}"
     mode: "0644"
 
 - name: Update the containers
-  when: cifmw_update_containers | bool
   environment:
     KUBECONFIG: "{{ cifmw_openshift_kubeconfig }}"
     PATH: "{{ cifmw_path }}"
   ansible.builtin.command:
-    cmd: "oc apply -f {{ cifmw_update_containers_dest_path }}"
+    cmd: "echo oc apply -f {{ cifmw_update_containers_dest_path_ }}"
+  when: cifmw_update_containers | bool or cifmw_update_containers_cvp | bool

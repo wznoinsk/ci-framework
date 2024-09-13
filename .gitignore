@@ -7,3 +7,9 @@ docs/dictionary/tmp
 .venv/*
 .env
 .idea/
+
+# history files saved by Local History VSCode extension
+.history/
+
+# notes saved by Project Notes VSCode extension
+.pnotes/

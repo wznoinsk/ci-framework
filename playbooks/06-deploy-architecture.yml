@@ -17,6 +17,15 @@
         - cifmw_architecture_scenario is not defined
       ansible.builtin.meta: end_play
 
+    - name: End the play if both cifmw_update_containers and cifmw_update_containers_cvp are true
+      fail:
+        msg: "Only one of cifmw_update_containers, cifmw_update_containers_cvp can be True"
+      when:
+        - cifmw_update_containers | bool
+        - cifmw_update_containers_cvp | bool
+      tags:
+        - always
+
     - name: Load Networking Environment Definition
       tags:
         - always
@@ -39,6 +48,7 @@
 
     - name: Look for nova migration keypair file
       tags:
+        - always
         - edpm_bootstrap
       register: _nova_key_file
       ansible.builtin.stat:
@@ -188,13 +198,15 @@
         - operator
         - edpm_bootstrap
 
-    - name: Update containers in deployed OSP operators
+    - name: Update containers in deployed OSP operators (including CVP)
       vars:
         cifmw_update_containers_metadata: controlplane
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: update_containers
+      when: cifmw_update_containers | default('false') | bool or cifmw_update_containers_cvp | default('false') | bool
       tags:
         - update_containers
+        - update_containers_cvp
         - edpm_bootstrap
 
     - name: Configure LVMS Storage Class

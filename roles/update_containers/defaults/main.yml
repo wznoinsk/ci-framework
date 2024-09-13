@@ -24,13 +24,26 @@ cifmw_update_containers_base_dir: >-
   {{
     cifmw_basedir | default(ansible_user_dir ~ '/ci-framework-data')
   }}
+
+cifmw_update_containers_template_file: "update_containers.j2"
+cifmw_update_containers_template_file_cvp: "update_containers_cvp.yml.j2"
+
 cifmw_update_containers_dest_path: >-
   {{
     [
       cifmw_update_containers_base_dir,
       'artifacts',
       'manifests',
-      'update_containers.yml'
+      cifmw_update_containers_template_file.replace('.j2','.yml')
+    ] | path_join
+  }}
+cifmw_update_containers_dest_path_cvp: >-
+  {{
+    [
+      cifmw_update_containers_base_dir,
+      'artifacts',
+      'manifests',
+      cifmw_update_containers_template_file_cvp.replace('.j2','')
     ] | path_join
   }}
 

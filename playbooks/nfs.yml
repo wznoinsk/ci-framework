@@ -26,6 +26,10 @@
     nftables_path: /etc/nftables
     nftables_conf: /etc/sysconfig/nftables.conf
   tasks:
+    - setup:
+      when: ansible_user_dir is not defined
+      tags: always
+
     - name: Set custom cifmw PATH reusable fact
       tags:
         - always

@@ -1,0 +1,28 @@
+{% set images_map_final = dict() %}
+{% set ns = namespace() %}
+
+{%- for image_cvp in cifmw_update_containers_cvp_openstack -%}
+  {%- set ns.match_found = 0 -%}
+  {%- set image_cvp_clean = image_cvp.split('/')[1] + "/" + image_cvp.split('/')[2].split(':')[0] %}
+  {%- set image_cvp_clean = image_cvp_clean | replace('-rhel9', '') %}
+  {%- for image_ocp_var in openstack_image_to_var_map -%}
+    {%- if image_cvp_clean == openstack_image_to_var_map[image_ocp_var] -%}
+      {%- set _ = images_map_final.update({image_ocp_var: image_cvp}) -%}
+      {%- set ns.match_found = 1 -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {#% if ns.match_found == 0 %}
+    ERROR: '{{ image_cvp }}' CVP container image wasn't matched to any *Image OCP variable
+  {%- endif -%#}
+{%- endfor -%}
+
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackVersion
+metadata:
+  name: {{ cifmw_update_containers_metadata }}
+  namespace: {{ cifmw_update_containers_namespace }}
+spec:
+  customContainerImages:
+{% for i in images_map_final | sort %}
+    {{ i }}: {{ images_map_final[i] }}
+{% endfor %}

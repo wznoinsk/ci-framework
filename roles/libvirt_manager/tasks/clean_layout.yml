@@ -23,21 +23,29 @@
       difference(ansible_facts.packages.keys()) |
       length == 0
     - _virtqemud.stat.exists
+  ignore_errors: "{{ cifmw_libvirt_manager_cleanup_force_mode }}"
   block:
     - name: List all of the existing virtual machines
       register: vms_list
       community.libvirt.virt:
         command: list_vms
         uri: "qemu:///system"
+      ignore_errors: false  
 
     - name: Get pool configuration
       community.libvirt.virt_pool:
         command: facts
         uri: "qemu:///system"
+      ignore_errors: false
 
     - name: Filter out target environment
       ansible.builtin.set_fact:
         cleanup_vms: "{{ vms_list.list_vms | select('match', '^cifmw-.*$') }}"
+
+    - name: Remove Ansible Controller from the list of cleanup_vms
+      ansible.builtin.set_fact:
+        cleanup_vms: "{{ cleanup_vms | difference(['cifmw-controller-0']) }}"
+      when: not cifmw_libvirt_manager_cleanup_ansible_controller | bool
 
     - name: Expose cleanup list
       ansible.builtin.debug:
